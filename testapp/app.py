@@ -41,7 +41,12 @@ def add_sensor_data():
     
     logging.warning("got packet!")
 
-    return packet
+
+    # Do something here !
+
+
+    # return packet
+    return "", 204
 
 
 
