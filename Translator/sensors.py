@@ -212,6 +212,8 @@ def upsert_observed_properties(service: fsc.SensorThingsService):
 
 
 def upsert_datastreams(service: fsc.SensorThingsService):
+
+    
     """
     Makes sure there is a datastream for each combination of sensor and observed property
     """

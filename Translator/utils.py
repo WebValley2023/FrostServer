@@ -161,15 +161,28 @@ def create_sensor_with_datastream(service, packet):
         service.create(sensor)
         print(f"Inserted {sensor=}")
 
+        #create observation
+        observation = fsc.Observation(
+            # id = i,
+            result = 5,
+            phenomenon_time = packet['timestamp'],
+            # result_time = packet['timestamp'],
+            # valid_time = packet['timestamp'],
+            # result_quality = list(packet.values())[i],
+            datastream= fsc.Datastream(id=i),
+            parameters = {}
+        )
+        service.create(observation)
+        
         datastream = fsc.Datastream(
             id = i,
             name = "Datastream_"+"S" + str(i),
             description = "Datastream_for_"+"S" + str(i),
             phenomenon_time= packet['timestamp'],
-            sensor_id = sensor.id,
-            thing_id = sensor.properties['node_id'],
-            observed_property_id = i,
-            observations = {}
+            #sensor_id = sensor.id,
+            #thing_id = sensor.properties['node_id'],
+            #observed_property_id = i,
+            #observations = {}
         )
         service.create(datastream)
         print(f"Inserted {datastream=}")
