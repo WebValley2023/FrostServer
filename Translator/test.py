@@ -32,15 +32,6 @@ class Node:
     properties: str
 
 @dataclass
-class Location:
-    id: int
-    result: str
-    description: str
-    properties: str
-    encoding_type: str
-    location: str
-
-@dataclass
 class Observation:
     id: int
     result: str
@@ -75,6 +66,20 @@ class ObservedProperty:
     description: str
     properties: str  # what is it observing??
 
+def isolate_parameters(packet):
+     l = ['T', 'RH', 'P', 'timestamp', 'node_id']
+     parameters = {key: item for key, item in packet.items() if key in l}
+     parameters['timestamp'] = convert_to_isoformat(parameters['timestamp'])
+     return parameters
+
+def convert_structure(packet):
+     colonne = ['descr', 'value']
+     dataFrame = pd.DataFrame(list(packet.items()), columns=colonne)
+     convertedData = convert_to_isoformat(dataFrame['value'].iloc[27])
+     dataFrame['value'].iloc[27] = convertedData
+     return dataFrame
+
+
 def match_observated_properties(definition_to_match):
     definition = ''
     description = ''
@@ -85,7 +90,7 @@ def match_observated_properties(definition_to_match):
         match definition_to_match:
             case 'T':
                 definition = 'T'
-                description = 'Temperature°C'
+                description = 'Temperature'
             case 'RH':
                 definition = 'RH'
                 description = 'Humidity'
@@ -114,7 +119,7 @@ def create_observated_property(service, packet):
             properties = {}
         )
         observatedProperties[observatedProperty.id] = observatedProperty
-        service.create(observatedProperty)
+        # service.create(observation)
         print(f"Inserted {observatedProperty=}")
     
     return observatedProperties
@@ -131,32 +136,17 @@ def create_observation(service, packet):
             parameters = {}
         )
         observations[observation.id] = observation
-        service.create(observation)
+        # service.create(observation)
         print(f"Inserted {observation=}")
 
     return observations
 
-def create_location(service, packet):
-    locations = {}
-    
-    for i in range(len(packet)): # numero di elementi da definire
-        location = fsc.Location(
-            id = i,
-            description = "Location_description",
-            properties = {},
-            encoding_type = "?",
-            location = "any",
-        )
-        locations[location.id] = location
-        service.create(location)
-        print(f"Inserted {location=}")
-    
-    return locations
+
 
 def create_node(service):
     things = {}
     
-    for i in range(1, 2): # numero di elementi da definire
+    for i in range(1, 2):
         thing = fsc.Thing(
             id = i,
             name = "Node_Name",
@@ -164,7 +154,7 @@ def create_node(service):
             properties = {} 
         )
         things[thing.id] = thing
-        service.create(thing)
+        #service.create(thing)
         print(f"Inserted {thing=}")
 
     return things
@@ -173,7 +163,7 @@ def create_sensor(service):
     sensors_map = {}
     
     for i in range(1,9):
-        sensor = fsc.Sensor(
+        entity = fsc.Sensor(
             id = i,
             name = "S" + str(i),
             description = "S"  + str(i) + "_Description",
@@ -181,9 +171,9 @@ def create_sensor(service):
             encoding_type = 'application/json',
             metadata = "any",
         )
-        sensors_map[sensor.id] = sensor
-        service.create(sensor)
-        print(f"Inserted {sensor=}")
+        sensors_map[entity.id] = entity
+        service.create(entity)
+        print(f"Inserted {entity=}")
     
     return sensors_map
 
@@ -197,5 +187,6 @@ sensors = create_sensor(service=service)
 create_node(service=service)
 create_observation(service=service, packet=packet)
 create_observated_property(service=service, packet=packet)
-create_location(service=service, packet=packet)
+
+parameters = isolate_parameters(packet)
 
