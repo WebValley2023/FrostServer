@@ -43,16 +43,32 @@ def create_observated_property(service, packet):
         )
         observatedProperties[observatedProperty.id] = observatedProperty
         service.create(observatedProperty)
+
         print(f"Inserted {observatedProperty=}")
+
+
     
     return observatedProperties
 
 
 def create_observation(service, packet):
     observations = {}
-    
+    #create the datastream
+    #retrive the list of all sensors and assign the value to a variable
+    sensors = service.query(fsc.Sensor)
+
     for i in range(len(packet)):
         packet['timestamp'] = "2016-06-22T13:21:31.144Z"
+
+        '''
+        datastream = fsc.Datastream(
+            id = i,
+            name = "Datastream_name",
+            description = "Datastream_description",
+            phenomenon_time= packet['timestamp'],
+            sensor_id =
+            '''
+
         observation = fsc.Observation(
             # id = i,
             result = 5,
@@ -60,7 +76,7 @@ def create_observation(service, packet):
             # result_time = packet['timestamp'],
             # valid_time = packet['timestamp'],
             # result_quality = list(packet.values())[i],
-            datastream= fsc.Datastream(id=1),
+            datastream= fsc.Datastream(id=i),
             parameters = {}
         )
         observations[observation.id] = observation
@@ -115,14 +131,52 @@ def create_sensor(service):
             encoding_type = 'application/json',
             metadata = "any",
         )
+
+        
         sensors_map[sensor.id] = sensor
         service.create(sensor)
         print(f"Inserted {sensor=}")
     
+    #create a datastream for each sensor
+  
+        
+
+
     return sensors_map
 
-def create_datastream(service, packet):
 
+def create_sensor_with_datastream(service, packet):
+
+    sensors= {}
+    for i in range(len(packet)):
+        sensor = fsc.Sensor(
+            id = i,
+            name = "S" + str(i),
+            description = "S"  + str(i) + "_Description",
+            properties = {"node_id": "S"  + str(i) + "_Node"},
+            encoding_type = 'application/json',
+            metadata = "any",
+        )
+        sensors[sensor.id] = sensor
+        service.create(sensor)
+        print(f"Inserted {sensor=}")
+
+        datastream = fsc.Datastream(
+            id = i,
+            name = "Datastream_"+"S" + str(i),
+            description = "Datastream_for_"+"S" + str(i),
+            phenomenon_time= packet['timestamp'],
+            sensor_id = sensor.id,
+            thing_id = sensor.properties['node_id'],
+            observed_property_id = i,
+            observations = {}
+        )
+        service.create(datastream)
+        print(f"Inserted {datastream=}")
+
+        
+        
+    return sensors
 
 
 
