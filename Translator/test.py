@@ -32,6 +32,14 @@ class Node:
     properties: str
 
 @dataclass
+class Location:
+    id: int
+    name: str
+    description: str
+    encoding_type: str
+
+
+@dataclass
 class Observation:
     id: int
     result: str
@@ -40,6 +48,29 @@ class Observation:
     valid_time: str
     result_quality: str
     parameters: str
+
+@dataclass
+class ObservedProperty:
+    id:int
+    name: str
+    definition: str
+    description: str
+
+
+@dataclass
+class HistoricalLocation:
+    id: int
+    time:str
+
+@dataclass
+class Datastream:
+    id: int
+    name: str
+    description: str
+    #todo understand observation_type
+    unit_of_measurement: str
+    observated_area: str
+
 
 # @dataclass
 # class Packet:
@@ -66,6 +97,7 @@ class ObservedProperty:
     description: str
     properties: str  # what is it observing??
 
+
 def match_observated_properties(definition_to_match):
     definition = ''
     description = ''
@@ -76,15 +108,15 @@ def match_observated_properties(definition_to_match):
         match definition_to_match:
             case 'T':
                 definition = 'T'
-                description = 'Temperature'
+                description = 'https://qudt.org/vocab/unit/DEG_C'
             case 'RH':
                 definition = 'RH'
-                description = 'Humidity'
+                description = 'https://qudt.org/vocab/quantitykind/RelativeHumidity'
             case 'P':
-                definition = 'P'
-                description = 'Pressure'
+                definition = 'https://qudt.org/vocab/quantitykind/Pressure'
+                description = 'P'
             case 'timestamp':
-                definition = 'timestamp'
+                definition = 'https://qudt.org/vocab/quantitykind/Time'
                 description = 'Time_stamp'
             case 'node_id':
                 definition = 'node_id'
@@ -158,33 +190,38 @@ def create_sensor(service):
             metadata = "any",
         )
         sensors_map[entity.id] = entity
-        #service.create(entity)
+        service.create(entity)
         print(f"Inserted {entity=}")
     
     return sensors_map
 
+def isolate_parameters(packet):
+     l = ['T', 'RH', 'P', 'timestamp', 'node_id']
+     parameters = {key: item for key, item in packet.items() if key in l}
+     parameters['timestamp'] = convert_to_isoformat(parameters['timestamp'])
+     return parameters
+
+def convert_structure(packet):
+     colonne = ['descr', 'value']
+     dataFrame = pd.DataFrame(list(packet.items()), columns=colonne)
+     convertedData = convert_to_isoformat(dataFrame['value'].iloc[27])
+     dataFrame['value'].iloc[27] = convertedData
+     return dataFrame
 
 def convert_to_isoformat(dateInMilllis):
     convertToDayFormat = dt.fromtimestamp(dateInMilllis / 1000.0)
     return convertToDayFormat.isoformat() + 'Z'
 
 packet['timestamp'] = convert_to_isoformat(packet['timestamp'])
-# sensors = create_sensor(service=service)
-# create_node(service=service)
-# create_observation(service=service, packet=packet)
-# create_observated_property(service=service, packet=packet)
 
-#parameters = isolate_parameters(packet)
 
-# def isolate_parameters(packet):
-#     l = ['T', 'RH', 'P', 'timestamp', 'node_id']
-#     parameters = {key: item for key, item in packet.items() if key in l}
-#     parameters['timestamp'] = convert_to_isoformat(parameters['timestamp'])
-#     return parameters
 
-#def convert_structure(packet):
-#     colonne = ['descr', 'value']
-#     dataFrame = pd.DataFrame(list(packet.items()), columns=colonne)
-#     convertedData = convert_to_isoformat(dataFrame['value'].iloc[27])
-#     dataFrame['value'].iloc[27] = convertedData
-#     return dataFrame
+
+
+sensors = create_sensor(service=service)
+create_node(service=service)
+create_observation(service=service, packet=packet)
+create_observated_property(service=service, packet=packet)
+
+parameters = isolate_parameters(packet)
+
