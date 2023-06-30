@@ -37,4 +37,4 @@ def insert_observed_property(service,packet):
         service.create(observed_property)
 
 def insert_datastream():
-    
+
