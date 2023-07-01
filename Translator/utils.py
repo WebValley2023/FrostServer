@@ -54,26 +54,7 @@ def create_observated_property(service, packet):
     return observatedProperties
 
 
-# def create_observation(service, packet):
-#     observations = {}
 
-#     for i in range(len(packet)):
-
-#         observation = fsc.Observation(
-#             # id = i,
-#             result = 5,
-#             phenomenon_time = packet['timestamp'],
-#             result_time = packet['timestamp'],
-#             valid_time = packet['timestamp'],
-#             result_quality = list(packet.values())[i],
-#             datastream= fsc.Datastream(id=i),
-#             parameters = {}
-#         )
-#         observations[observation.id] = observation
-#         service.create(observation)
-#         print(f"Inserted {observation=}")
-
-#     return observations
 
 def create_location(service, packet):
     locations = {}
@@ -127,45 +108,14 @@ def create_sensor(service):
         service.create(sensor)
         print(f"Inserted {sensor=}")
     
-    #create a datastream for each sensor
     
     return sensors_map
 
 
-# def create_sensor_with_datastream(service, packet):
-
-#     sensors= {}
-#     for i in range(len(packet)):
-#         sensor = fsc.Sensor(
-#             id = i,
-#             name = "S" + str(i),
-#             description = "S"  + str(i) + "_Description",
-#             properties = {"node_id": "S"  + str(i) + "_Node"},
-#             encoding_type = 'application/json',
-#             metadata = "any",
-#         )
-#         sensors[sensor.id] = sensor
-#         service.create(sensor)
-#         print(f"Inserted {sensor=}")
-
-#         # datastream = fsc.Datastream(
-#         #     id = i,
-#         #     name = "Datastream_"+"S" + str(i),
-#         #     description = "Datastream_for_"+"S" + str(i),
-#         #     phenomenon_time= packet['timestamp'],
-#         #     sensor_id = sensor.id,
-#         #     thing_id = sensor.properties['node_id'],
-#         #     observed_property_id = i,
-#         #     observations = {}
-#         # )
-#         # service.create(datastream)
-#         # print(f"Inserted {datastream=}")
-        
-#     return sensors
 
 def create_observation(service, packet):
     
-    dav = fsc.model.ext.data_array_value.DataArrayValue()
+
     unit_of_measurement = fsc.UnitOfMeasurement(
         name="degree Celsius",
         symbol="°C",
