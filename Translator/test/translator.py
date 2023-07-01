@@ -14,9 +14,11 @@ packet = {'S1_R1': 500, 'S1_R2': 128000000, 'S1_Voltage': 3.91,
 FROST_SERVER = "http://localhost:8080/FROST-Server/v1.1"
 service = fsc.SensorThingsService(FROST_SERVER)
 
-
-#first we need to create the thing
-
+print(convert_to_isoformat(packet['timestamp']))
+thing_id=insert_thing(service, packet['node_id'])
+insert_sensor(service, packet, thing_id)
+observed_property_id=insert_observed_property(service, packet)
+insert_datastream(service, packet,thing_id)
 
 
 
