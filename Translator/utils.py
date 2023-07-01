@@ -1,7 +1,12 @@
 import frost_sta_client as fsc
 import pandas as pd
-from datetime import datetime as dt
+from datetime import datetime as datetime, timedelta
 import dateutil.parser as datP
+from dataclasses import dataclass, fields
+from dateutil import parser
+
+
+
 
 def match_observated_properties(definition_to_match):
     definition = ''
@@ -46,44 +51,29 @@ def create_observated_property(service, packet):
 
         print(f"Inserted {observatedProperty=}")
 
-
-    
     return observatedProperties
 
 
-def create_observation(service, packet):
-    observations = {}
-    #create the datastream
-    #retrive the list of all sensors and assign the value to a variable
-    sensors = service.query(fsc.Sensor)
+# def create_observation(service, packet):
+#     observations = {}
 
-    for i in range(len(packet)):
-        packet['timestamp'] = "2016-06-22T13:21:31.144Z"
+#     for i in range(len(packet)):
 
-        '''
-        datastream = fsc.Datastream(
-            id = i,
-            name = "Datastream_name",
-            description = "Datastream_description",
-            phenomenon_time= packet['timestamp'],
-            sensor_id =
-            '''
+#         observation = fsc.Observation(
+#             # id = i,
+#             result = 5,
+#             phenomenon_time = packet['timestamp'],
+#             result_time = packet['timestamp'],
+#             valid_time = packet['timestamp'],
+#             result_quality = list(packet.values())[i],
+#             datastream= fsc.Datastream(id=i),
+#             parameters = {}
+#         )
+#         observations[observation.id] = observation
+#         service.create(observation)
+#         print(f"Inserted {observation=}")
 
-        observation = fsc.Observation(
-            # id = i,
-            result = 5,
-            phenomenon_time = packet['timestamp'],
-            # result_time = packet['timestamp'],
-            # valid_time = packet['timestamp'],
-            # result_quality = list(packet.values())[i],
-            datastream= fsc.Datastream(id=i),
-            parameters = {}
-        )
-        observations[observation.id] = observation
-        service.create(observation)
-        print(f"Inserted {observation=}")
-
-    return observations
+#     return observations
 
 def create_location(service, packet):
     locations = {}
@@ -129,7 +119,7 @@ def create_sensor(service):
             description = "S"  + str(i) + "_Description",
             properties = {"node_id": "S"  + str(i) + "_Node"},
             encoding_type = 'application/json',
-            metadata = "any",
+            metadata = "any"
         )
 
         
@@ -138,61 +128,110 @@ def create_sensor(service):
         print(f"Inserted {sensor=}")
     
     #create a datastream for each sensor
-  
-        
-
-
+    
     return sensors_map
 
 
-def create_sensor_with_datastream(service, packet):
+# def create_sensor_with_datastream(service, packet):
 
-    sensors= {}
-    for i in range(len(packet)):
-        sensor = fsc.Sensor(
-            id = i,
-            name = "S" + str(i),
-            description = "S"  + str(i) + "_Description",
-            properties = {"node_id": "S"  + str(i) + "_Node"},
-            encoding_type = 'application/json',
-            metadata = "any",
-        )
-        sensors[sensor.id] = sensor
-        service.create(sensor)
-        print(f"Inserted {sensor=}")
+#     sensors= {}
+#     for i in range(len(packet)):
+#         sensor = fsc.Sensor(
+#             id = i,
+#             name = "S" + str(i),
+#             description = "S"  + str(i) + "_Description",
+#             properties = {"node_id": "S"  + str(i) + "_Node"},
+#             encoding_type = 'application/json',
+#             metadata = "any",
+#         )
+#         sensors[sensor.id] = sensor
+#         service.create(sensor)
+#         print(f"Inserted {sensor=}")
 
-        #create observation
-        observation = fsc.Observation(
-            # id = i,
-            result = 5,
-            phenomenon_time = packet['timestamp'],
-            # result_time = packet['timestamp'],
-            # valid_time = packet['timestamp'],
-            # result_quality = list(packet.values())[i],
-            datastream= fsc.Datastream(id=i),
-            parameters = {}
-        )
-        service.create(observation)
+#         # datastream = fsc.Datastream(
+#         #     id = i,
+#         #     name = "Datastream_"+"S" + str(i),
+#         #     description = "Datastream_for_"+"S" + str(i),
+#         #     phenomenon_time= packet['timestamp'],
+#         #     sensor_id = sensor.id,
+#         #     thing_id = sensor.properties['node_id'],
+#         #     observed_property_id = i,
+#         #     observations = {}
+#         # )
+#         # service.create(datastream)
+#         # print(f"Inserted {datastream=}")
         
-        datastream = fsc.Datastream(
-            id = i,
-            name = "Datastream_"+"S" + str(i),
-            description = "Datastream_for_"+"S" + str(i),
-            phenomenon_time= packet['timestamp'],
-            #sensor_id = sensor.id,
-            #thing_id = sensor.properties['node_id'],
-            #observed_property_id = i,
-            #observations = {}
-        )
-        service.create(datastream)
-        print(f"Inserted {datastream=}")
+#     return sensors
 
-        
-        
-    return sensors
+def create_observation(service, packet):
+    
+    dav = fsc.model.ext.data_array_value.DataArrayValue()
+    unit_of_measurement = fsc.UnitOfMeasurement(
+        name="degree Celsius",
+        symbol="°C",
+        definition="http://unitsofmeasure.org/ucum.html#para-30"
+    )
+    feature_of_interest = fsc.FeatureOfInterest(
+        id=1,
+        properties = {"prova": "prova"},
+        name="Feature",
+        description="Feature of Interest Description",
+        encoding_type="application/vnd.geo+json",
+        feature={"type": "Point", "coordinates": [42.1234, -71.5678]}
+    )
+    observed_property = fsc.ObservedProperty(
+        name="Temperature",
+        definition="http://www.opengis.net/def/property/OGC/0/Sensor/temperature",
+        description="Temperature observed by sensor"
+    )
+    sensor = fsc.Sensor(
+        id = 1,
+        name = "Sensor_",
+        description="Sensor_for_",
+        properties = {"node_id": "S"},
+        encoding_type="http://www.opengis.net/doc/IS/SensorML/2.0/GEOMETRY_XYZ",
+        metadata = "any"
+    )
+    thing = fsc.Thing(
+        id = 1,
+        name = "Node_Name",
+        description = "Node_Description",
+        properties = {"location": "42.1234,-71.5678"} 
+    )
+    datastream = fsc.Datastream(
+        id=1,
+        name="Datastream_",
+        description="Datastream_for_",
+        unit_of_measurement=unit_of_measurement,
+        phenomenon_time=packet['timestamp'],
+        result_time=packet['timestamp'],
+        #observations=[observation],
+        observation_type="http://www.opengis.net/def/observationType/OGC-OM/2.0/OM_Measurement",
+        observed_property=observed_property,
+        sensor=sensor,
+        thing=thing
+    )
+    observation = fsc.Observation(
+        phenomenon_time=packet['timestamp'],
+        result=packet['T'],
+        feature_of_interest=feature_of_interest,
+        datastream=datastream
+    )
+    
+    service.create(feature_of_interest)
+    service.create(observed_property)
+    service.create(sensor)
+    service.create(thing)
+    service.create(datastream)
+    service.create(observation)
+    
 
 
+def convert_to_isoformat(timestamp):
+    start_time = datetime.utcfromtimestamp(timestamp / 1000)
+    end_time = start_time + timedelta(seconds=60)
 
-def convert_to_isoformat(dateInMilllis):
-    convertToDayFormat = dt.fromtimestamp(dateInMilllis / 1000.0)
-    return convertToDayFormat.isoformat() + 'Z'
+    interval = f"{start_time.isoformat()}Z/{end_time.isoformat()}Z"
+    
+    return interval
+
