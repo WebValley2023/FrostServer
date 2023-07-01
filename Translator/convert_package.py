@@ -15,17 +15,5 @@ packet = {'S1_R1': 500, 'S1_R2': 128000000, 'S1_Voltage': 3.91,
  'S8_R1': 108.6, 'S8_R2': 373333344, 'S8_Voltage': 4.33,
  'T': 33.5,'RH': 32.7, 'P': 988, 'timestamp': 1659106708162, 'node_id': 'appa1-debug'}
 
-
-
-
-
 packet['timestamp'] = convert_to_isoformat(packet['timestamp'])
-print(packet['timestamp'])
-sensors = create_sensor(service=service, packet=packet)
-create_node(service=service)
-create_location(service=service, packet=packet)
 create_observation(service=service, packet=packet)
-create_observated_property(service=service, packet=packet)
-
-
-
