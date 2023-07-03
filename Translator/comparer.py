@@ -29,7 +29,7 @@ sensors_list = service.sensors().query().list()
 
 
 
-tosearch = "Sensor_1"
+tosearch = "Sensor_"
 
 
 sensors_filtered_list = []
@@ -51,11 +51,14 @@ datastreams = service.datastreams().query().list()
 
 for datastream in datastreams:
     print(datastream.sensor)
+    '''
     try:
-        if datastream.sensor.id == 1158:
-            print(datastream.id)
+        if datastream.sensor.id == 1224:
+            print("iddd"+datastream.id)
     except:
         pass
+    '''
+    
 
 
 
