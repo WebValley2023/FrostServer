@@ -215,8 +215,7 @@ def create_datastream(service, packet):
         sensors = download_sensors(things[0].id)
 
     for i in range(len(packet) - 2):
-        if ((i + 1) % 3) == 0:
-            j += 1
+        
         unit_of_measurement = fsc.UnitOfMeasurement(
             name = list(packet)[i],
             symbol = set_unit_of_measure(list(packet)[i]),
@@ -246,6 +245,8 @@ def create_datastream(service, packet):
                 thing = things[0],
                 sensor = sensors[j]
             )
+        if ((i + 1) % 3) == 0:
+           j += 1
         service.create(datastream)
         print(f"{i=} Inserted {datastream=}")
         datastreams.append(datastream)
