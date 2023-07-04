@@ -54,11 +54,14 @@ to_encode = to_encode.replace(" ","+")
 sensors_list = json.loads(requests.get(to_encode).text)
 
 sensors_count = sensors_list["@iot.count"]
+
 sensors_list = sensors_list["value"]
 
 
 #filtering sensors by node
 for sensor in sensors_list:
+
+
     try:
         
         if sensor["properties"]["node_id"] == node_tosearch:
