@@ -258,8 +258,7 @@ def create_multidatastream(service, packet):
     j = 0
     for i in range(len(datastreams)):
 
-        if ((i + 1) % 3) == 0:
-            j += 1
+        
         multidatastream = fsc.MultiDatastream(
             name = "S" + str(j) + " Datastreams",
             description = "S" + str(j) + " Datastreams",
@@ -277,7 +276,8 @@ def create_multidatastream(service, packet):
             sensor = datastreams[i].sensor,
 
         )
-
+        if ((i + 1) % 3) == 0:
+            j += 1
         service.create(multidatastream)
         print(f"{i=} Inserted {multidatastream=}")
         multidatastreams.append(multidatastream)
@@ -290,9 +290,9 @@ def create_observation(service, packet):
     for i in range(len(packet) - 2):
         observation = fsc.Observation(
             phenomenon_time = packet['timestamp'],
-            result = packet[list(packet)[i]],
+            result =[packet[list(packet)[i]],1,2],
             feature_of_interest = features_of_interest[i],
-            datastream = datastreams[i]
+            multi_datastream = multidatastreams[i]
         )
         service.create(observation)
         print(f"{i=} Inserted {observation=}")
