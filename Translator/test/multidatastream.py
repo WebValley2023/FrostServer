@@ -211,18 +211,23 @@ def create_multidatastream(service, packet):
     j = 0
     for i in range(len(datastreams)):
 
-        if ((i + 1) % 3) == 0:
-            j += 1
+        
         multidatastream = fsc.MultiDatastream(
             name = "S" + str(j) + " Datastreams",
             description = "S" + str(j) + " Datastreams",
             properties={},
-            ##TODO fix this
-            observed_properties =[datastreams[i].observed_property, datastreams[i].observed_property, datastreams[i].observed_property],
+           
+
+            observed_properties=[
+                datastreams[i - 2].observed_property,
+                datastreams[i - 1].observed_property,
+                datastreams[i].observed_property,
+            ],
+
             observation_type = "http://www.opengis.net/def/observationType/OGC-OM/2.0/OM_ComplexObservation",
             observed_area=None,
-            ##TODO fix this
             unit_of_measurements = units_of_measurement[j],
+
             phenomenon_time = None,
             multi_observation_data_types = ["http://www.opengis.net/def/observationType/OGC-OM/2.0/OM_Measurement","http://www.opengis.net/def/observationType/OGC-OM/2.0/OM_Measurement","http://www.opengis.net/def/observationType/OGC-OM/2.0/OM_Measurement"],    
             result_time = None,
@@ -230,6 +235,10 @@ def create_multidatastream(service, packet):
             sensor = datastreams[i].sensor,
 
         )
+        if ((i + 1) % 3) == 0:
+            j += 1
+
+        print(len(units_of_measurement))
 
         service.create(multidatastream)
         print(f"{i=} Inserted {multidatastream=}")
@@ -242,10 +251,12 @@ def create_observation(service, packet):
     multidatastreams = create_multidatastream(service=service, packet=packet)
     for i in range(len(packet) - 2):
         observation = fsc.Observation(
-            phenomenon_time = packet['timestamp'],
-            result = packet[list(packet)[i]],
+            #phenomenon_time = packet['timestamp'],
+            ##FIXME timestamp
+            phenomenon_time= '2022-12-19T10:00:00Z/2022-12-19T11:00:00Z',
+            result = [packet[list(packet)[i]],1,2],
             feature_of_interest = features_of_interest[i],
-            datastream = datastreams[i]
+            multi_datastream = multidatastreams[i]
         )
         service.create(observation)
         print(f"{i=} Inserted {observation=}")
