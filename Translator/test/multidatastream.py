@@ -1,8 +1,4 @@
 import frost_sta_client as fsc
-from geojson import Point
-import pandas as pd
-import json
-import requests
 from datetime import datetime as datetime, timedelta
 
 def create_multidatastream_unit_of_measurement(datastreams):
@@ -68,7 +64,7 @@ def match_observated_properties(definition_to_match, name_or_definition):
         return description
     
 def create_location(service):
-    points = [Point((11.11022, 11.1262)), Point((46.10433, 46.06292))]
+    #points = [Point((11.11022, 11.1262)), Point((46.10433, 46.06292))]
     coordinates = [{"type":"Point","coordinates":[11.11022, 11.1262]}, {"type":"Point","coordinates":[46.10433, 46.06292]}]
     locations = []
     for i in range(0,2):
@@ -109,31 +105,8 @@ def create_node(service, packet):
     sensors = create_sensor(service=service, packet=packet, thing=thing)
     return sensors, things
 
-def check_already_extisting_sensors(node_id): #check if the sensors in thing with id 'node_id' already exist
-    filtered_sensors = []
-    node_to_search = node_id
-
-    to_encode = "http://localhost:8080/FROST-Server/v1.1/Sensors" 
-    #to_encode = to_encode.replace(" ","+")
-
-    sensors_list = json.loads(requests.get(to_encode).text)
-
-    #sensors_count = sensors_list["@iot.count"]
-    sensors_list = sensors_list["value"]
-
-    #filtering sensors by node
-    for sensor in sensors_list:
-        try:
-            if sensor["properties"]["node_id"] == node_to_search:
-                filtered_sensors.append(sensor['name'])   
-        except:
-            pass
-    return filtered_sensors
-
 def create_sensor(service, packet, thing):
-    already_extisting_sensors = check_already_extisting_sensors(thing.id)
     sensors = []
-    
     for i in range(0, 11):
         if i < 8:
             sensor = fsc.Sensor(
@@ -151,16 +124,11 @@ def create_sensor(service, packet, thing):
                 encoding_type = "application/vnd.geo+json",
                 metadata = "any"
             )
-        if sensor.name not in already_extisting_sensors:
-            service.create(sensor)
-            print(f"{i=} Inserted {sensor=}")
-            sensors.append(sensor)
-        else:
-            print("Sensor " + sensor.name + " Skipped")
+        service.create(sensor)
+        print(f"{i=} Inserted {sensor=}")
+        sensors.append(sensor)
         
     return sensors
-
-
 
 def create_feature_of_interest(service, packet):
     features_of_interest = []
@@ -177,20 +145,6 @@ def create_feature_of_interest(service, packet):
         features_of_interest.append(feature_of_interest)
     
     return features_of_interest
-
-def download_sensors(node_id): # download the sensors of a certain node_id
-    downloaded_sensors = []
-    node_to_search = node_id
-    to_encode = "http://localhost:8080/FROST-Server/v1.1/Sensors"
-    sensors_list = json.loads(requests.get(to_encode).text)
-    sensors_list = sensors_list["value"]
-    for sensor in sensors_list:
-        try:
-            if sensor["properties"]["node_id"] == node_to_search:
-                downloaded_sensors.append(sensor)   
-        except:
-            pass
-    return downloaded_sensors
 
 def observed_property(service, packet):
     observed_properties = []
@@ -211,11 +165,7 @@ def create_datastream(service, packet):
     datastreams = []
     sensors, things = create_node(service=service, packet=packet)
     observed_properties = observed_property(service=service, packet=packet)
-    if len(sensors) == 0:
-        sensors = download_sensors(things[0].id)
-
     for i in range(len(packet) - 2):
-        
         unit_of_measurement = fsc.UnitOfMeasurement(
             name = list(packet)[i],
             symbol = set_unit_of_measure(list(packet)[i]),
@@ -258,24 +208,23 @@ def create_multidatastream(service, packet):
     multidatastreams = []
     j = 0
     for i in range(len(datastreams)):
-
-        
         multidatastream = fsc.MultiDatastream(
             name = "S" + str(j) + " Datastreams",
             description = "S" + str(j) + " Datastreams",
             properties={},
-            ##TODO fix this
-            observed_properties =[datastreams[i].observed_property, datastreams[i].observed_property, datastreams[i].observed_property],
+            observed_properties=[
+                datastreams[i - 2].observed_property,
+                datastreams[i - 1].observed_property,
+                datastreams[i].observed_property,
+            ],
             observation_type = "http://www.opengis.net/def/observationType/OGC-OM/2.0/OM_ComplexObservation",
             observed_area=None,
-            ##TODO fix this
             unit_of_measurements = units_of_measurement[j],
             phenomenon_time = None,
             multi_observation_data_types = ["http://www.opengis.net/def/observationType/OGC-OM/2.0/OM_Measurement","http://www.opengis.net/def/observationType/OGC-OM/2.0/OM_Measurement","http://www.opengis.net/def/observationType/OGC-OM/2.0/OM_Measurement"],    
             result_time = None,
             thing = datastreams[i].thing,
             sensor = datastreams[i].sensor,
-
         )
         if ((i + 1) % 3) == 0:
             j += 1
@@ -291,7 +240,8 @@ def create_observation(service, packet):
     for i in range(len(packet) - 2):
         observation = fsc.Observation(
             phenomenon_time = packet['timestamp'],
-            result =[packet[list(packet)[i]],1,2],
+
+            result = [packet[list(packet)[i]],1,2],
             feature_of_interest = features_of_interest[i],
             multi_datastream = multidatastreams[i]
         )
@@ -303,12 +253,13 @@ def create_observation(service, packet):
 def convert_to_isoformat(timestamp):
     start_time = datetime.utcfromtimestamp(timestamp / 1000)
     end_time = start_time + timedelta(seconds=60)
-
     interval = f"{start_time.isoformat()}Z/{end_time.isoformat()}Z"
     return interval
 
-
-
-
-
-
+def clean_packet(packet):
+    packet_keys = ['S1_R1', 'S1_R2', 'S1_Voltage', 'S2_R1', 'S2_R2', 'S2_Voltage', 'S3_R1', 'S3_R2', 'S3_Voltage', 'S4_R1', 'S4_R2', 'S4_Voltage', 'S5_R1', 'S5_R2', 'S5_Voltage', 'S6_R1', 'S6_R2', 'S6_Voltage', 'S7_R1', 'S7_R2', 'S7_Voltage', 'S8_R1', 'S8_R2', 'S8_Voltage', 'T', 'RH', 'P', 'timestamp', 'node_id']
+    
+    for i in list(packet.keys()):
+        if i not in packet_keys:
+            del packet[i]
+    return packet
