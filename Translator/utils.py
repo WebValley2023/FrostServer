@@ -115,6 +115,10 @@ def create_datastream(service, packet):
         thing = create_node(service=service)
     )
     service.create(datastream)
+
+    print(datastream.sensor)
+    print(datastream.sensor.id)
+    print(datastream.id)
     return datastream
 
 def create_observation(service, packet):
