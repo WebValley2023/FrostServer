@@ -1,6 +1,8 @@
 import frost_sta_client as fsc
 from geojson import Point
 import pandas as pd
+import json
+import requests
 from datetime import datetime as datetime, timedelta
 
 def create_multidatastream_unit_of_measurement(datastreams):
@@ -107,8 +109,31 @@ def create_node(service, packet):
     sensors = create_sensor(service=service, packet=packet, thing=thing)
     return sensors, things
 
+def check_already_extisting_sensors(node_id): #check if the sensors in thing with id 'node_id' already exist
+    filtered_sensors = []
+    node_to_search = node_id
+
+    to_encode = "http://localhost:8080/FROST-Server/v1.1/Sensors" 
+    #to_encode = to_encode.replace(" ","+")
+
+    sensors_list = json.loads(requests.get(to_encode).text)
+
+    #sensors_count = sensors_list["@iot.count"]
+    sensors_list = sensors_list["value"]
+
+    #filtering sensors by node
+    for sensor in sensors_list:
+        try:
+            if sensor["properties"]["node_id"] == node_to_search:
+                filtered_sensors.append(sensor['name'])   
+        except:
+            pass
+    return filtered_sensors
+
 def create_sensor(service, packet, thing):
+    already_extisting_sensors = check_already_extisting_sensors(thing.id)
     sensors = []
+    
     for i in range(0, 11):
         if i < 8:
             sensor = fsc.Sensor(
@@ -126,11 +151,16 @@ def create_sensor(service, packet, thing):
                 encoding_type = "application/vnd.geo+json",
                 metadata = "any"
             )
-        service.create(sensor)
-        print(f"{i=} Inserted {sensor=}")
-        sensors.append(sensor)
+        if sensor.name not in already_extisting_sensors:
+            service.create(sensor)
+            print(f"{i=} Inserted {sensor=}")
+            sensors.append(sensor)
+        else:
+            print("Sensor " + sensor.name + " Skipped")
         
     return sensors
+
+
 
 def create_feature_of_interest(service, packet):
     features_of_interest = []
@@ -147,6 +177,20 @@ def create_feature_of_interest(service, packet):
         features_of_interest.append(feature_of_interest)
     
     return features_of_interest
+
+def download_sensors(node_id): # download the sensors of a certain node_id
+    downloaded_sensors = []
+    node_to_search = node_id
+    to_encode = "http://localhost:8080/FROST-Server/v1.1/Sensors"
+    sensors_list = json.loads(requests.get(to_encode).text)
+    sensors_list = sensors_list["value"]
+    for sensor in sensors_list:
+        try:
+            if sensor["properties"]["node_id"] == node_to_search:
+                downloaded_sensors.append(sensor)   
+        except:
+            pass
+    return downloaded_sensors
 
 def observed_property(service, packet):
     observed_properties = []
@@ -167,6 +211,9 @@ def create_datastream(service, packet):
     datastreams = []
     sensors, things = create_node(service=service, packet=packet)
     observed_properties = observed_property(service=service, packet=packet)
+    if len(sensors) == 0:
+        sensors = download_sensors(things[0].id)
+
     for i in range(len(packet) - 2):
         if ((i + 1) % 3) == 0:
             j += 1
