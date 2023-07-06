@@ -330,13 +330,14 @@ def clean_packet(packet):
 def read_all_data(service):
     all_data_db = 'all_data.csv'
     db = pandas.read_csv(all_data_db)
-    db.sort_values(by=['node_description', 'ts', 'sensor_description'], inplace=True)
-    for i in range(0, len(db), 8):
+    grouped = db.groupby(['node_description', 'ts'])
+    for key, item in grouped:
+        l = grouped.get_group(key).index[0]
         rows = []
         packet = {}
         k = 0
         while k < 8:
-            rows.append(db.loc[k].to_dict())
+            rows.append(db.loc[l + k].to_dict())
             packet[str(rows[k]['sensor_description']) + '_heater_resistance'] = rows[k]['heater_res']
             packet[str(rows[k]['sensor_description']) + '_signal_resistance'] = rows[k]['signal_res']
             packet[str(rows[k]['sensor_description']) + '_voltage'] = rows[k]['volt']
@@ -348,4 +349,4 @@ def read_all_data(service):
                 packet['node_id'] = rows[0]['node_description']
             k += 1
         create_observation(service=service, packet=packet)
-        print('------------------------------------SEPARATORE------------------------------------')
+        print("-------------------SEPARATORE-------------------")
